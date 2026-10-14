@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aeróforo · Web
 
-## Getting Started
+Home page con monitor en vivo del **Aeróforo**, el dispositivo de monitoreo de calidad del aire del Equipo 1 (Investigación e Innovación Tecnológica, Tecsup).
 
-First, run the development server:
+La web se comporta como si estuviera conectada a los sensores reales: semáforo verde/amarillo/rojo, índice de calidad del aire (ICA), lecturas de PM2.5, PM10, CO₂, CO, temperatura y humedad, gráficas, alertas y mapa de estaciones. **Los datos son simulados.**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Cómo funcionan los datos
+
+```
+Supabase (Postgres)                         Navegador
+┌───────────────────────────┐               ┌──────────────────────────────┐
+│ stations · metrics        │  carga 24 h   │ AirProvider (useAirData.tsx) │
+│ readings · alerts         │ ────────────▶ │  · historial desde Supabase  │
+│ pg_cron cada 5 min:       │               │  · simulador cada 3 s        │
+│   simulate_sensor_tick()  │               │  · alertas al cambiar nivel  │
+└───────────────────────────┘               └──────────────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Supabase** guarda las estaciones, los límites del semáforo, el historial y las alertas. Un `pg_cron` hace de "sensor" e inserta una lectura por estación cada 5 minutos.
+- **El navegador** continúa la serie cada 3 s con `src/lib/simulator.ts` (misma curva de horas punta: 8 h y 19 h). El botón **"Simular pico de contaminación"** sirve para la demo.
+- Si faltan las variables de Supabase, la web genera todo localmente y sigue funcionando.
+- **Con hardware real**, el ESP32 solo tendría que insertar filas en `readings`. Habría que quitar el cron y el simulador del navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+  app/            layout, page (Home) y estilos globales
+  components/     Hero, LiveMonitor, MetricCard, TrendChart, AlertFeed, StationsMap, Semaforo, AqiGauge…
+  hooks/          useAirData.tsx: carga de Supabase + simulación en vivo
+  lib/            air.ts (niveles, ICA), simulator.ts, supabase.ts, types.ts
+supabase/migrations/   esquema, seed y cron del simulador
+public/media/          hero.mp4 opcional (video de fondo generado con Higgsfield)
+docs/PROMPTS.md        prompts para ChatGPT + Higgsfield
+```
 
-## Learn More
+## Desarrollo
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cp .env.example .env.local   # completar con la URL y la clave publicable de Supabase
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Despliegue
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Proyecto Next.js listo para Vercel. Variables de entorno necesarias:
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Valor |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave publicable (solo lectura por RLS) |
