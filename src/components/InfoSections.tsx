@@ -111,7 +111,7 @@ const TEAM = [
   { name: "José Barzola Veliz", role: "Estructura y ensamble" },
   { name: "Grecia Huanco", role: "Planos, materiales y documentación" },
   { name: "Alexander Faustino", role: "Planificación y Gantt" },
-  { name: "Willar", role: "Interfaz y semáforo" },
+  { name: "Guillermo Willard", role: "Interfaz y semáforo" },
   { name: "Mijael Lino", role: "Prototipo interactivo y pruebas" },
 ];
 
