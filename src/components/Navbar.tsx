@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useAir } from "@/hooks/useAirData";
 import { LiveBadge } from "./LiveBadge";
 import { Semaforo } from "./Semaforo";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 const LINKS = [
   { href: "#monitor", label: "Monitor" },
@@ -40,7 +41,7 @@ export function Navbar() {
         <ul className="hidden items-center gap-1 text-sm text-muted md:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} className="rounded-full px-3 py-1.5 transition-colors duration-150 hover:bg-black/[0.04] hover:text-text">
+              <a href={l.href} className="rounded-full px-3 py-1.5 transition-colors duration-150 hover:bg-hover hover:text-text">
                 {l.label}
               </a>
             </li>
@@ -48,8 +49,9 @@ export function Navbar() {
         </ul>
         <div className="flex items-center gap-2">
           <LiveBadge paused={paused} />
+          <ThemeSwitch />
           <button
-            className="pressable grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-black/5 hover:text-text md:hidden"
+            className="pressable grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-hover hover:text-text md:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}

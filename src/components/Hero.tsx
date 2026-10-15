@@ -40,7 +40,7 @@ export function Hero() {
             Cuando el aire cambia, el semáforo cambia de color y te avisa qué hacer.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a href="#monitor" className="pressable inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-medium text-white hover:bg-ink/90">
+            <a href="#monitor" className="pressable inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-medium text-on-ink hover:bg-ink/90">
               Ver monitor en vivo <ArrowRight size={16} />
             </a>
             <a href="#como-funciona" className="pressable inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-[15px] font-medium hover:bg-surface-2">
@@ -71,7 +71,7 @@ export function Hero() {
 
         <div
           className="level-transition relative overflow-hidden rounded-[28px] border border-line p-5 shadow-[var(--shadow-float)] sm:p-7"
-          style={{ background: info ? `linear-gradient(160deg, #fff 0%, ${info.soft} 70%)` : "#fff" }}
+          style={{ background: info ? `linear-gradient(160deg, var(--surface) 0%, ${info.soft} 70%)` : "var(--surface)" }}
         >
           <div className="flex items-center justify-between gap-3">
             <StationSelect />
@@ -79,7 +79,7 @@ export function Hero() {
           </div>
 
           <div className="mt-8 flex items-center gap-6 sm:gap-10">
-            <Semaforo level={level} size="lg" />
+            <Semaforo level={level} size="lg" interactive />
             <div className="min-w-0">
               <p className="text-sm text-muted">
                 {station.name} · {station.zone}
@@ -102,10 +102,11 @@ export function Hero() {
           </div>
 
           {info && (
-            <p className="mt-8 rounded-2xl bg-white/80 px-4 py-3 text-[15px] leading-snug backdrop-blur">
+            <p className="mt-8 rounded-2xl bg-glass px-4 py-3 text-[15px] leading-snug backdrop-blur">
               {info.advice}
             </p>
           )}
+          <p className="mt-3 text-center text-xs text-faint">Pasa el mouse o toca una luz del semáforo para ver qué significa</p>
         </div>
       </div>
     </section>

@@ -29,15 +29,13 @@ export function AqiGauge({ aqi, level }: { aqi: number; level: Level }) {
         cx={x}
         cy={y}
         r="9"
-        fill="#fff"
-        stroke="#0e1116"
         strokeWidth="3"
-        style={{ transition: "cx 700ms var(--ease-in-out), cy 700ms var(--ease-in-out)" }}
+        style={{ fill: "var(--surface)", stroke: "var(--text)", transition: "cx 700ms var(--ease-in-out), cy 700ms var(--ease-in-out)" }}
       />
-      <text x={CX} y={CY - 8} textAnchor="middle" fill="#0e1116" fontSize="40" fontWeight="600" letterSpacing="-1.5" className="tabular">
+      <text x={CX} y={CY - 8} textAnchor="middle" fontSize="40" fontWeight="600" letterSpacing="-1.5" className="tabular" style={{ fill: "var(--text)" }}>
         {aqi}
       </text>
-      <text x={CX} y={CY + 12} textAnchor="middle" fill="#5f6672" fontSize="10" fontWeight="500" letterSpacing="1">
+      <text x={CX} y={CY + 12} textAnchor="middle" fontSize="10" fontWeight="500" letterSpacing="1" style={{ fill: "var(--muted)" }}>
         ICA
       </text>
     </svg>

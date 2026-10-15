@@ -22,7 +22,7 @@ export function AlertFeed() {
       <ul className="-mx-2 flex-1 overflow-y-auto" aria-live="polite">
         {list.length === 0 && <li className="py-10 text-center text-sm text-muted">Sin alertas por ahora.</li>}
         {list.map((a) => (
-          <li key={a.id} className="flex gap-3 rounded-xl px-2 py-2.5 hover:bg-black/[0.03]">
+          <li key={a.id} className="flex gap-3 rounded-xl px-2 py-2.5 hover:bg-hover">
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: LEVELS[a.level].color }} />
             <div className="min-w-0 flex-1">
               <p className="flex items-baseline gap-2 text-[13px]">

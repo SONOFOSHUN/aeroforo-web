@@ -5,6 +5,7 @@ import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useAir } from "@/hooks/useAirData";
 import { LEVELS, ZONES } from "@/lib/air";
+import { FavoriteButton } from "./FavoriteButton";
 
 // Límites de Lima Metropolitana (de Ancón a Pucusana, del litoral a Chaclacayo)
 const LIMA_BOUNDS: [[number, number], [number, number]] = [
@@ -78,7 +79,7 @@ export function StationsMap() {
       const l = latest(s.id)?.level;
       node.dataset.active = String(s.id === selectedId);
       const dot = node.querySelector("span");
-      if (dot) dot.style.backgroundColor = l ? LEVELS[l].color : "#9aa0a9";
+      if (dot) dot.style.backgroundColor = l ? LEVELS[l].color : "var(--faint)";
     }
   });
 
@@ -96,7 +97,7 @@ export function StationsMap() {
           <div ref={el} className="h-[420px] w-full sm:h-[560px]" role="region" aria-label="Mapa de estaciones en Lima Metropolitana" />
           <div className="pointer-events-none absolute left-3 top-3 z-[400] flex flex-wrap gap-1.5">
             {(["verde", "amarillo", "rojo"] as const).map((l) => (
-              <span key={l} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium shadow-sm backdrop-blur">
+              <span key={l} className="inline-flex items-center gap-1.5 rounded-full bg-glass px-2.5 py-1 text-[11px] font-medium shadow-sm backdrop-blur">
                 <span className="h-2 w-2 rounded-full" style={{ background: LEVELS[l].color }} />
                 {LEVELS[l].label}
               </span>
@@ -115,11 +116,11 @@ export function StationsMap() {
                     const r = latest(s.id);
                     const on = s.id === selectedId;
                     return (
-                      <li key={s.id}>
+                      <li key={s.id} className={`flex items-center rounded-xl pr-1 ${on ? "bg-hover-strong" : "hover:bg-hover"}`}>
                         <button
                           onClick={() => select(s.id)}
                           aria-pressed={on}
-                          className={`pressable flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${on ? "bg-black/[0.05]" : "hover:bg-black/[0.03]"}`}
+                          className="pressable flex min-w-0 flex-1 items-center gap-3 rounded-xl py-2.5 pl-3 pr-2 text-left"
                         >
                           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: r ? LEVELS[r.level].color : "var(--faint)" }} />
                           <span className="min-w-0 flex-1">
@@ -131,6 +132,7 @@ export function StationsMap() {
                             <span className="block text-[10px] text-faint">ICA</span>
                           </span>
                         </button>
+                        <FavoriteButton stationId={s.id} district={s.district} />
                       </li>
                     );
                   })}

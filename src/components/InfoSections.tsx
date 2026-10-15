@@ -139,7 +139,7 @@ export function Team() {
       <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {TEAM.map((m) => (
           <li key={m.name} className="card p-5">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-ink text-sm font-semibold text-white">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-ink text-sm font-semibold text-on-ink">
               {m.name
                 .split(" ")
                 .slice(0, 2)

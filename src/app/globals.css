@@ -19,8 +19,77 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
+
+  --on-ink: #ffffff;
+  --hover: rgba(17, 24, 39, 0.04);
+  --hover-strong: rgba(17, 24, 39, 0.07);
+  --glass: rgba(255, 255, 255, 0.8);
+  --map-bg: #eceae4;
+  --map-filter: grayscale(1) contrast(0.92) brightness(1.06);
+
+  /* Fondos y textos de cada nivel del semáforo */
+  --verde-soft: #e8f6ec;
+  --verde-ink: #166534;
+  --amarillo-soft: #fdf3e1;
+  --amarillo-ink: #92400e;
+  --rojo-soft: #fdecec;
+  --rojo-ink: #991b1b;
+
   --shadow-card: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 16px -4px rgba(17, 24, 39, 0.06);
   --shadow-float: 0 1px 2px rgba(17, 24, 39, 0.06), 0 12px 32px -8px rgba(17, 24, 39, 0.18);
+}
+
+/* Modo oscuro: lo activa el switch (data-theme) o, sin JavaScript, la preferencia del sistema */
+:root[data-theme="dark"] {
+  --bg: #0c0e11;
+  --surface: #15181c;
+  --surface-2: #1b1f24;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #ecedee;
+  --muted: #9aa1ab;
+  --faint: #676d76;
+  --ink: #f2f2f0;
+  --on-ink: #0e1116;
+  --brand: #2dd4bf;
+  --hover: rgba(255, 255, 255, 0.05);
+  --hover-strong: rgba(255, 255, 255, 0.09);
+  --glass: rgba(21, 24, 28, 0.78);
+  --map-bg: #1a1d21;
+  --map-filter: grayscale(1) invert(1) contrast(0.88) brightness(0.92);
+  --verde-soft: #11241a;
+  --verde-ink: #4ade80;
+  --amarillo-soft: #2a1f0e;
+  --amarillo-ink: #fbbf24;
+  --rojo-soft: #2d1515;
+  --rojo-ink: #f87171;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.5), 0 16px 40px -8px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0c0e11;
+    --surface: #15181c;
+    --surface-2: #1b1f24;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
+    --text: #ecedee;
+    --muted: #9aa1ab;
+    --faint: #676d76;
+    --ink: #f2f2f0;
+    --on-ink: #0e1116;
+    --hover: rgba(255, 255, 255, 0.05);
+    --hover-strong: rgba(255, 255, 255, 0.09);
+    --glass: rgba(21, 24, 28, 0.78);
+    --verde-soft: #11241a;
+    --verde-ink: #4ade80;
+    --amarillo-soft: #2a1f0e;
+    --amarillo-ink: #fbbf24;
+    --rojo-soft: #2d1515;
+    --rojo-ink: #f87171;
+    color-scheme: dark;
+  }
 }
 
 @theme inline {
@@ -33,6 +102,10 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-hover: var(--hover);
+  --color-hover-strong: var(--hover-strong);
+  --color-glass: var(--glass);
   --color-brand: var(--brand);
   --color-green: var(--green);
   --color-amber: var(--amber);
@@ -44,6 +117,13 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+}
+
+/* Cambio de tema: un círculo que se expande desde el switch (View Transitions) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 body {
@@ -122,18 +202,75 @@ body {
   transform: none;
 }
 
+/* Avisos: compactos en móvil, más grandes en PC y con modo lectura al hacer clic */
+.level-toast {
+  width: calc(100vw - 24px);
+}
+.level-toast .toast-head { padding: 16px 16px 12px; }
+.level-toast .toast-body { padding: 12px 16px 16px; }
+.level-toast .toast-title { font-size: 15px; }
+.level-toast .toast-sub { font-size: 13px; }
+.level-toast .toast-list { display: grid; gap: 6px; font-size: 13px; }
+.level-toast .toast-list li { gap: 8px; }
+.level-toast .toast-check { width: 14px; height: 14px; margin-top: 2px; }
+@media (min-width: 640px) {
+  .level-toast { width: 420px; }
+  .level-toast .toast-head { padding: 18px 18px 14px; }
+  .level-toast .toast-body { padding: 14px 18px 18px; }
+  .level-toast .toast-title { font-size: 16.5px; }
+  .level-toast .toast-sub { font-size: 14px; }
+  .level-toast .toast-list { gap: 8px; font-size: 14.5px; }
+  .level-toast .toast-check { width: 16px; height: 16px; }
+
+  .level-toast.is-expanded { width: 540px; }
+  .level-toast.is-expanded .toast-head { padding: 22px 22px 18px; gap: 16px; }
+  .level-toast.is-expanded .toast-body { padding: 18px 22px 22px; }
+  .level-toast.is-expanded .toast-title { font-size: 21px; letter-spacing: -0.015em; }
+  .level-toast.is-expanded .toast-sub { font-size: 15.5px; }
+  .level-toast.is-expanded .toast-list { gap: 12px; font-size: 17px; line-height: 1.45; }
+  .level-toast.is-expanded .toast-list li { gap: 10px; }
+  .level-toast.is-expanded .toast-check { width: 19px; height: 19px; margin-top: 3px; }
+}
+
+/* Leyenda del semáforo: aparece desde la luz que la abrió */
+.semaforo-legend {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+@starting-style {
+  .semaforo-legend {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+.semaforo-legend.instant {
+  transition: none;
+}
+
+/* Estrella de favorito: salto breve al marcarla (acción poco frecuente, puede tener deleite) */
+@keyframes star-pop {
+  0% { transform: scale(0.6) rotate(-15deg); }
+  55% { transform: scale(1.25) rotate(8deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.star-pop {
+  animation: star-pop 420ms var(--ease-out);
+}
+
 /* Mapa (Leaflet) */
 .leaflet-container {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  background: #eceae4;
+  background: var(--map-bg);
 }
 /* Mapa en gris para que solo destaquen los colores del semáforo */
 .leaflet-tile-pane {
-  filter: grayscale(1) contrast(0.92) brightness(1.06);
+  filter: var(--map-filter);
 }
 .leaflet-control-attribution {
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.8) !important;
+  background: var(--glass) !important;
+  color: var(--muted);
 }
 .aer-marker {
   display: grid;
@@ -144,17 +281,17 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  border: 3px solid #fff;
+  border: 3px solid var(--surface);
   box-shadow: 0 1px 4px rgba(17, 24, 39, 0.35);
   transition: background-color 600ms var(--ease-in-out), transform 200ms var(--ease-out);
 }
 .aer-marker[data-active="true"] span {
   transform: scale(1.35);
-  box-shadow: 0 0 0 4px rgba(14, 17, 22, 0.15), 0 1px 4px rgba(17, 24, 39, 0.35);
+  box-shadow: 0 0 0 4px var(--hover-strong), 0 1px 4px rgba(17, 24, 39, 0.35);
 }
 .leaflet-tooltip.aer-tip {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-ink);
   border: 0;
   border-radius: 8px;
   padding: 4px 8px;
@@ -175,7 +312,14 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .live-dot, .tick { animation: none; }
+  .live-dot, .tick, .star-pop { animation: none; }
   .reveal { transform: none; transition: opacity 200ms ease; }
   .pressable:active { transform: none; }
+}
+
+/* Controles de zoom del mapa en ambos temas */
+.leaflet-bar a {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
 }
