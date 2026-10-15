@@ -3,16 +3,18 @@
 import { useMemo, useState } from "react";
 import { Database, Pause, Play, Zap } from "lucide-react";
 import { useAir } from "@/hooks/useAirData";
-import { LEVELS, valueOf } from "@/lib/air";
+import { LEVELS, RECOMMENDATIONS, valueOf } from "@/lib/air";
 import type { MetricCode } from "@/lib/types";
 import { AlertFeed } from "./AlertFeed";
 import { AqiGauge } from "./AqiGauge";
+import { LevelAlerts } from "./LevelAlerts";
 import { MetricCard } from "./MetricCard";
 import { Semaforo } from "./Semaforo";
+import { StationSelect } from "./StationSelect";
 import { TrendChart } from "./TrendChart";
 
 export function LiveMonitor() {
-  const { stations, metrics, history, live, selectedId, select, latest, paused, togglePause, triggerSpike, source, ready } = useAir();
+  const { stations, metrics, history, live, selectedId, latest, paused, togglePause, triggerSpike, source, ready } = useAir();
   const [metricCode, setMetricCode] = useState<MetricCode>("pm25");
   const [range, setRange] = useState<"live" | "24h">("live");
 
@@ -24,80 +26,78 @@ export function LiveMonitor() {
     [range, liveSeries, history, station.id],
   );
   const metric = metrics.find((m) => m.code === metricCode) ?? metrics[0];
+  const info = r ? LEVELS[r.level] : null;
 
   return (
-    <section id="monitor" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-20 sm:px-6">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <section id="monitor" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+      <div className="flex flex-col gap-6">
         <div>
-          <p className="text-sm font-medium uppercase tracking-widest text-accent">Monitor en vivo</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Lecturas de los sensores</h2>
-          <p className="mt-3 max-w-2xl text-muted">
-            Elige una estación para ver su semáforo, el índice de calidad del aire y cada contaminante. Los valores se
-            actualizan cada 3 segundos.
+          <p className="eyebrow">Monitor en vivo</p>
+          <h2 className="heading mt-3 text-3xl font-semibold sm:text-[40px]">Lecturas de los sensores</h2>
+          <p className="mt-3 max-w-xl text-muted">
+            Se actualiza cada 3 segundos. Cuando el semáforo cambia de color, aparece un aviso con lo que conviene hacer.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs text-muted"
-            title={source === "supabase" ? "Historial y estaciones cargados desde Supabase" : "Sin conexión a Supabase: datos generados en el navegador"}
+          <StationSelect />
+          <LevelAlerts />
+          <button
+            onClick={togglePause}
+            className="pressable inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 text-sm font-medium hover:bg-surface-2"
           >
-            <Database size={14} className={source === "supabase" ? "text-green" : "text-amber"} />
-            {source === "supabase" ? "Supabase" : "Datos locales"} · simulación
-          </span>
-          <button onClick={togglePause} className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm hover:border-accent/40">
             {paused ? <Play size={14} /> : <Pause size={14} />}
             {paused ? "Reanudar" : "Pausar"}
           </button>
           <button
             onClick={() => triggerSpike(station.id)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red/40 bg-red/10 px-3 py-2 text-sm text-red hover:bg-red/20"
+            className="pressable inline-flex h-9 items-center gap-1.5 rounded-full bg-red px-3.5 text-sm font-medium text-white hover:bg-red/90"
           >
-            <Zap size={14} /> Simular pico de contaminación
+            <Zap size={14} /> Simular pico
           </button>
         </div>
       </div>
 
-      <div className="mt-8 flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Estaciones">
-        {stations.map((s) => {
-          const l = latest(s.id)?.level;
-          const on = s.id === station.id;
-          return (
-            <button
-              key={s.id}
-              role="tab"
-              aria-selected={on}
-              onClick={() => select(s.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-sm transition ${
-                on ? "border-accent/60 bg-accent/10 text-text" : "border-line bg-surface text-muted hover:text-text"
-              }`}
-            >
-              <span className="h-2 w-2 rounded-full" style={{ background: l ? LEVELS[l].color : "#475569" }} />
-              {s.district}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-[320px_1fr]">
-        <div className="card flex flex-col items-center p-6 text-center">
-          <p className="text-xs uppercase tracking-widest text-muted">{station.code}</p>
-          <p className="mt-1 font-medium">{station.name}</p>
-          <div className="mt-6 flex items-center gap-6">
-            <Semaforo level={r?.level ?? null} />
-            <div className="w-44">{r && <AqiGauge aqi={r.aqi} level={r.level} />}</div>
-          </div>
-          {r ? (
-            <>
-              <p className="mt-4 text-lg font-semibold" style={{ color: LEVELS[r.level].color }}>
-                {LEVELS[r.level].short}
+      <div className="mt-8 grid gap-4 lg:grid-cols-[340px_1fr]">
+        <div className="card level-transition flex flex-col p-6" style={info ? { background: `linear-gradient(180deg, ${info.soft}, #fff 65%)` } : undefined}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold">{station.district}</p>
+              <p className="text-sm text-muted">
+                {station.code} · {station.name}
               </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{LEVELS[r.level].detail}</p>
+            </div>
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-2.5 py-1 text-[11px] text-muted"
+              title={source === "supabase" ? "Historial y estaciones desde Supabase" : "Sin conexión a Supabase: datos generados en el navegador"}
+            >
+              <Database size={12} className={source === "supabase" ? "text-green" : "text-amber"} />
+              {source === "supabase" ? "Supabase" : "Local"}
+            </span>
+          </div>
+          <div className="mt-6 flex items-center gap-5">
+            <Semaforo level={r?.level ?? null} size="md" />
+            <div className="flex-1">{r && <AqiGauge aqi={r.aqi} level={r.level} />}</div>
+          </div>
+          {r && info ? (
+            <>
+              <p className="level-transition mt-4 text-lg font-semibold" style={{ color: info.ink }}>
+                {info.label} · {info.short}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{info.detail}</p>
+              <ul className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
+                {RECOMMENDATIONS[r.level].slice(0, 3).map((t) => (
+                  <li key={t} className="flex gap-2.5 leading-snug">
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: info.color }} />
+                    {t}
+                  </li>
+                ))}
+              </ul>
             </>
           ) : (
             <p className="mt-6 text-sm text-muted">{ready ? "Estación sin datos" : "Cargando lecturas…"}</p>
           )}
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
           {metrics.map((m) => (
             <MetricCard
               key={m.code}
@@ -111,24 +111,24 @@ export function LiveMonitor() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_380px]">
-        <div className="card p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="card p-5 sm:p-6">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-medium">
-                {metric.name} <span className="text-muted">· {metric.unit}</span>
+              <h3 className="font-semibold">
+                {metric.name} <span className="font-normal text-muted">· {metric.unit}</span>
               </h3>
-              <p className="text-xs text-muted">{metric.description}</p>
+              <p className="mt-0.5 text-sm text-muted">{metric.description}</p>
             </div>
-            <div className="flex rounded-lg border border-line p-0.5 text-xs" role="group" aria-label="Rango">
+            <div className="flex rounded-full bg-black/[0.05] p-0.5 text-[13px]" role="group" aria-label="Rango">
               {(["live", "24h"] as const).map((k) => (
                 <button
                   key={k}
                   onClick={() => setRange(k)}
                   aria-pressed={range === k}
-                  className={`rounded-md px-3 py-1.5 ${range === k ? "bg-accent/15 text-accent" : "text-muted hover:text-text"}`}
+                  className={`pressable rounded-full px-3.5 py-1.5 font-medium ${range === k ? "bg-white text-text shadow-sm" : "text-muted hover:text-text"}`}
                 >
-                  {k === "live" ? "En vivo" : "Últimas 24 h"}
+                  {k === "live" ? "En vivo" : "24 horas"}
                 </button>
               ))}
             </div>

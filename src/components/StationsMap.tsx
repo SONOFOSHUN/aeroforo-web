@@ -1,88 +1,143 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import type { Map as LeafletMap, Marker } from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useAir } from "@/hooks/useAirData";
-import { LEVELS } from "@/lib/air";
+import { LEVELS, ZONES } from "@/lib/air";
 
-// Recorte de Lima Metropolitana para proyectar lat/lng en el SVG.
-const BOUNDS = { minLat: -12.16, maxLat: -11.95, minLng: -77.09, maxLng: -76.89 };
-const W = 520;
-const H = 520;
-const project = (lat: number, lng: number) => [
-  ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * W,
-  ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) * H,
+// Límites de Lima Metropolitana (de Ancón a Pucusana, del litoral a Chaclacayo)
+const LIMA_BOUNDS: [[number, number], [number, number]] = [
+  [-12.53, -77.2],
+  [-11.56, -76.62],
 ];
 
 export function StationsMap() {
   const { stations, latest, selectedId, select } = useAir();
+  const el = useRef<HTMLDivElement>(null);
+  const map = useRef<LeafletMap | null>(null);
+  const markers = useRef(new Map<number, Marker>());
+  const selectRef = useRef(select);
+
+  useEffect(() => {
+    selectRef.current = select;
+  }, [select]);
+
+  // Crear el mapa una sola vez (Leaflet solo funciona en el navegador)
+  useEffect(() => {
+    let cancelled = false;
+    const markerMap = markers.current;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled || !el.current || map.current) return;
+      const m = L.map(el.current, {
+        maxBounds: LIMA_BOUNDS,
+        maxBoundsViscosity: 0.8,
+        minZoom: 10,
+        maxZoom: 16,
+        zoomControl: false,
+        scrollWheelZoom: false,
+        attributionControl: true,
+      });
+      L.control.zoom({ position: "bottomright" }).addTo(m);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(m);
+      m.fitBounds(
+        L.latLngBounds(stations.map((s) => [s.lat, s.lng] as [number, number])),
+        { padding: [28, 28] },
+      );
+      for (const s of stations) {
+        const marker = L.marker([s.lat, s.lng], {
+          icon: L.divIcon({ className: "aer-marker", html: "<span></span>", iconSize: [26, 26] }),
+          keyboard: true,
+          title: `${s.district} · ${s.name}`,
+        })
+          .bindTooltip(s.district, { direction: "top", offset: [0, -12], className: "aer-tip" })
+          .on("click", () => selectRef.current(s.id))
+          .addTo(m);
+        markerMap.set(s.id, marker);
+      }
+      map.current = m;
+    })();
+    return () => {
+      cancelled = true;
+      map.current?.remove();
+      map.current = null;
+      markerMap.clear();
+    };
+    // Las estaciones se cargan una vez; solo cambia su color.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stations.length]);
+
+  // Pintar cada marcador con el color de su semáforo
+  useEffect(() => {
+    for (const s of stations) {
+      const node = markers.current.get(s.id)?.getElement();
+      if (!node) continue;
+      const l = latest(s.id)?.level;
+      node.dataset.active = String(s.id === selectedId);
+      const dot = node.querySelector("span");
+      if (dot) dot.style.backgroundColor = l ? LEVELS[l].color : "#9aa0a9";
+    }
+  });
 
   return (
-    <section id="estaciones" className="mx-auto w-full max-w-7xl scroll-mt-20 px-4 py-20 sm:px-6">
-      <p className="text-sm font-medium uppercase tracking-widest text-accent">Red de estaciones</p>
-      <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Lima, punto por punto</h2>
-      <p className="mt-3 max-w-2xl text-muted">
-        Cada Aeróforo se instala en una zona con tránsito o actividad distinta. Toca una estación para verla en el monitor.
+    <section id="estaciones" className="mx-auto w-full max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6">
+      <p className="eyebrow">Red de estaciones</p>
+      <h2 className="heading mt-3 text-3xl font-semibold sm:text-[40px]">Lima Metropolitana, punto por punto</h2>
+      <p className="mt-3 max-w-xl text-muted">
+        {stations.length} Aeróforos repartidos en las cinco zonas de Lima Metropolitana. Toca uno en el mapa o en la lista para verlo en el
+        monitor.
       </p>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="card relative overflow-hidden p-4">
-          <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Mapa de estaciones en Lima">
-            <defs>
-              <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" fill="rgba(148,163,184,0.18)" />
-              </pattern>
-            </defs>
-            {/* Tierra y litoral estilizado */}
-            <path d={`M 150 0 L ${W} 0 L ${W} ${H} L 120 ${H} C 140 440 70 400 95 330 C 120 270 40 230 70 170 C 95 120 130 60 150 0 Z`} fill="url(#dots)" />
-            <path d="M 150 0 C 130 60 95 120 70 170 C 40 230 120 270 95 330 C 70 400 140 440 120 520" stroke="rgba(34,211,238,0.35)" strokeWidth="2" fill="none" />
-            <text x="24" y="300" fill="rgba(139,154,179,0.6)" fontSize="12" letterSpacing="3">OCÉANO PACÍFICO</text>
-            {/* Río Rímac */}
-            <path d="M 160 225 C 260 220 330 205 400 180 C 450 165 490 160 520 150" stroke="rgba(34,211,238,0.25)" strokeWidth="3" fill="none" strokeDasharray="6 6" />
-            <text x="250" y="238" fill="rgba(139,154,179,0.6)" fontSize="10">Río Rímac</text>
-            {stations.map((s) => {
-              const [x, y] = project(s.lat, s.lng);
-              const l = latest(s.id)?.level;
-              const c = l ? LEVELS[l].color : "#475569";
-              const on = s.id === selectedId;
-              return (
-                <g key={s.id} onClick={() => select(s.id)} className="cursor-pointer" role="button" aria-label={`${s.name}, ${s.district}`}>
-                  <circle cx={x} cy={y} r={on ? 34 : 24} fill={c} opacity="0.12" style={{ transition: "all .5s" }} />
-                  <circle cx={x} cy={y} r="9" fill={c} stroke="#060a13" strokeWidth="3" style={{ transition: "fill .5s" }} />
-                  <text x={x + 16} y={y + 4} fill={on ? "#e6edf7" : "#8b9ab3"} fontSize="13" fontWeight={on ? 600 : 400}>
-                    {s.district}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+      <div className="mt-10 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="card relative overflow-hidden p-0">
+          <div ref={el} className="h-[420px] w-full sm:h-[560px]" role="region" aria-label="Mapa de estaciones en Lima Metropolitana" />
+          <div className="pointer-events-none absolute left-3 top-3 z-[400] flex flex-wrap gap-1.5">
+            {(["verde", "amarillo", "rojo"] as const).map((l) => (
+              <span key={l} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium shadow-sm backdrop-blur">
+                <span className="h-2 w-2 rounded-full" style={{ background: LEVELS[l].color }} />
+                {LEVELS[l].label}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <ul className="space-y-2">
-          {stations.map((s) => {
-            const r = latest(s.id);
-            const on = s.id === selectedId;
-            return (
-              <li key={s.id}>
-                <a
-                  href="#monitor"
-                  onClick={() => select(s.id)}
-                  className={`card flex items-center gap-4 p-4 transition hover:border-accent/40 ${on ? "ring-1 ring-accent/60" : ""}`}
-                >
-                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: r ? LEVELS[r.level].color : "#475569" }} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{s.district}</p>
-                    <p className="truncate text-xs text-muted">
-                      {s.code} · {s.name}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono text-xl font-semibold tabular-nums">{r?.aqi ?? "—"}</p>
-                    <p className="text-[11px] text-muted">ICA</p>
-                  </div>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="card max-h-[560px] overflow-y-auto p-2">
+          {ZONES.map((z) => (
+            <div key={z} className="py-1">
+              <p className="eyebrow px-3 pb-1 pt-2">{z}</p>
+              <ul>
+                {stations
+                  .filter((s) => s.zone === z)
+                  .map((s) => {
+                    const r = latest(s.id);
+                    const on = s.id === selectedId;
+                    return (
+                      <li key={s.id}>
+                        <button
+                          onClick={() => select(s.id)}
+                          aria-pressed={on}
+                          className={`pressable flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${on ? "bg-black/[0.05]" : "hover:bg-black/[0.03]"}`}
+                        >
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: r ? LEVELS[r.level].color : "var(--faint)" }} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[14px] font-medium">{s.district}</span>
+                            <span className="block truncate text-[12px] text-muted">{s.name}</span>
+                          </span>
+                          <span className="text-right">
+                            <span className="block text-[17px] font-semibold tabular">{r?.aqi ?? "—"}</span>
+                            <span className="block text-[10px] text-faint">ICA</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

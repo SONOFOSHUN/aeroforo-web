@@ -23,7 +23,9 @@ SECCIONES
 1. Hero: titular, estado actual del semáforo de la estación seleccionada, ICA y contaminante principal.
 2. Monitor en vivo: selector de estación, semáforo + medidor ICA, 6 tarjetas de sensores con mini-gráfica
    y tendencia, gráfica (en vivo / 24 h) con líneas de límite, feed de alertas, botón "Simular pico".
-3. Mapa de estaciones (6 en Lima) coloreadas por nivel.
+3. Mapa real (Leaflet + OpenStreetMap en gris) con 12 estaciones SOLO en Lima Metropolitana, agrupadas por zona
+   (Norte, Este, Centro, Moderna, Sur), coloreadas por nivel.
+   Avisos: cuando el semáforo cambia de color, notificación (Sonner) con recomendaciones de qué hacer.
 4. Explicación del semáforo con límites por contaminante y recomendaciones.
 5. Cómo funciona: sensores → ESP32 → nube (Supabase) → semáforo y web.
 6. Equipo y curso.
@@ -35,11 +37,14 @@ DATOS
   y picos de contaminación ocasionales). Si Supabase no responde, genera los datos localmente.
 
 STACK
-Next.js (App Router) + TypeScript + Tailwind + Recharts + @supabase/supabase-js. Despliegue en Vercel.
+Next.js (App Router) + TypeScript + Tailwind + Recharts + Leaflet + Sonner + @supabase/supabase-js. Despliegue en Vercel.
 
 DISEÑO
-Tema oscuro tecnológico. Paleta: fondo #060A13, acento cian #22D3EE, verde #22C55E, ámbar #F59E0B,
-rojo #EF4444. Tipografía Geist. Responsive (desde 375 px), accesible, sin scroll horizontal.
+Tema claro y sereno (principios de emilkowalski/skills: emil-design-eng y apple-design). Fondo #F5F4F0,
+tinta #0E1116, tarjetas blancas; los únicos colores saturados son los del semáforo: verde #16A34A,
+ámbar #D97706, rojo #DC2626. Tipografía Geist con tracking negativo en títulos. Botones con scale(0.97) al
+presionar, curvas ease-out propias, transiciones < 300 ms, respeta prefers-reduced-motion.
+Responsive (desde 375 px), accesible, sin scroll horizontal.
 ```
 
 ## 2. Prompt para ChatGPT conectado a Higgsfield
@@ -51,8 +56,8 @@ Eres el director de arte del proyecto Aeróforo, un dispositivo que mide la cali
 muestra en un semáforo verde, amarillo y rojo. Usa Higgsfield para generar los assets de su página web.
 
 Estilo obligatorio para todos los assets:
-- Fotorrealista, look de comercial de tecnología, tema oscuro.
-- Paleta: grafito #0F172A, cian #22D3EE y acentos del semáforo (#22C55E, #F59E0B, #EF4444).
+- Fotorrealista, look de comercial de tecnología, luminoso y limpio.
+- Paleta clara: fondo hueso #F5F4F0, tinta #0E1116 y acentos del semáforo (#16A34A, #D97706, #DC2626).
 - Sin texto, sin números, sin logos, sin marcas de agua (los datos los pone la web).
 - Dejar el tercio izquierdo con espacio negativo para titulares.
 - Escenarios de Lima: cielo gris costero, avenidas con tránsito, parques; nada genérico de EE. UU.
@@ -74,4 +79,4 @@ Al final dame una lista con cada archivo, su uso en la web y el nombre sugerido:
 hero.mp4, sensor-macro.mp4, semaforo.jpg, og.jpg.
 ```
 
-**Dónde poner los archivos:** cópialos a `public/media/`. El `hero.mp4` se activa solo como fondo del Hero (exporta en 1080p, MP4, menos de 4 MB, sin audio).
+**Dónde poner los archivos:** cópialos a `public/media/` y pide que se integren en la web (exporta los videos en 1080p, MP4, menos de 4 MB, sin audio).

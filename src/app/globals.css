@@ -1,16 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #060a13;
-  --surface: #0c1322;
-  --surface-2: #111a2e;
-  --line: rgba(148, 163, 184, 0.14);
-  --text: #e6edf7;
-  --muted: #8b9ab3;
-  --accent: #22d3ee;
-  --green: #22c55e;
-  --amber: #f59e0b;
-  --red: #ef4444;
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface-2: #faf9f6;
+  --line: rgba(17, 24, 39, 0.08);
+  --line-strong: rgba(17, 24, 39, 0.14);
+  --text: #0e1116;
+  --muted: #5f6672;
+  --faint: #9aa0a9;
+  --ink: #0e1116;
+  --brand: #0f766e;
+  --green: #16a34a;
+  --amber: #d97706;
+  --red: #dc2626;
+
+  /* Curvas de animación (emil-design-eng) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --shadow-card: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 16px -4px rgba(17, 24, 39, 0.06);
+  --shadow-float: 0 1px 2px rgba(17, 24, 39, 0.06), 0 12px 32px -8px rgba(17, 24, 39, 0.18);
 }
 
 @theme inline {
@@ -18,9 +28,12 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-text: var(--text);
   --color-muted: var(--muted);
-  --color-accent: var(--accent);
+  --color-faint: var(--faint);
+  --color-ink: var(--ink);
+  --color-brand: var(--brand);
   --color-green: var(--green);
   --color-amber: var(--amber);
   --color-red: var(--red);
@@ -30,48 +43,139 @@
 
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
+  font-feature-settings: "ss01", "cv11";
 }
 
-.grid-bg {
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+/* Tipografía: tracking negativo en títulos grandes, cuerpo cerca de 0 */
+.display {
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+.heading {
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .card {
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 1rem;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
 }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.8); opacity: 0.7; }
-  100% { transform: scale(2.2); opacity: 0; }
+/* Cualquier elemento presionable responde al toque */
+.pressable {
+  transition: transform 160ms var(--ease-out), background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
-.pulse-ring::after {
-  content: "";
-  position: absolute;
-  inset: 0;
+.pressable:active {
+  transform: scale(0.97);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cambio de nivel: el color viaja suave, sin saltos bruscos */
+.level-transition {
+  transition: background-color 600ms var(--ease-in-out), color 600ms var(--ease-in-out), border-color 600ms var(--ease-in-out);
+}
+
+@keyframes live-dot {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+.live-dot {
+  animation: live-dot 2s var(--ease-out) infinite;
+}
+
+/* Valor nuevo: breve resaltado */
+@keyframes tick {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+.tick {
+  animation: tick 400ms var(--ease-out);
+}
+
+/* Entrada escalonada de secciones */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out);
+}
+.reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Mapa (Leaflet) */
+.leaflet-container {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: #eceae4;
+}
+/* Mapa en gris para que solo destaquen los colores del semáforo */
+.leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.92) brightness(1.06);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+.aer-marker {
+  display: grid;
+  place-items: center;
+}
+.aer-marker span {
+  display: block;
+  width: 16px;
+  height: 16px;
   border-radius: 9999px;
-  background: currentColor;
-  animation: pulse-ring 1.8s ease-out infinite;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(17, 24, 39, 0.35);
+  transition: background-color 600ms var(--ease-in-out), transform 200ms var(--ease-out);
+}
+.aer-marker[data-active="true"] span {
+  transform: scale(1.35);
+  box-shadow: 0 0 0 4px rgba(14, 17, 22, 0.15), 0 1px 4px rgba(17, 24, 39, 0.35);
+}
+.leaflet-tooltip.aer-tip {
+  background: var(--ink);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: var(--shadow-float);
+}
+.leaflet-tooltip.aer-tip::before {
+  display: none;
 }
 
-@keyframes flash {
-  from { background-color: rgba(34, 211, 238, 0.12); }
-  to { background-color: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-float);
+  }
 }
-.flash { animation: flash 1.2s ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .pulse-ring::after, .flash { animation: none; }
+  .live-dot, .tick { animation: none; }
+  .reveal { transform: none; transition: opacity 200ms ease; }
+  .pressable:active { transform: none; }
 }

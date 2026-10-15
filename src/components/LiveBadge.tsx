@@ -1,7 +1,7 @@
 export function LiveBadge({ paused }: { paused: boolean }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-medium text-muted">
-      <span className={`relative h-2 w-2 rounded-full ${paused ? "bg-muted" : "pulse-ring bg-green text-green"}`} />
+    <span className="inline-flex h-8 items-center gap-2 rounded-full border border-line bg-surface px-3 text-xs font-medium text-muted">
+      <span className={`h-1.5 w-1.5 rounded-full ${paused ? "bg-faint" : "live-dot bg-green"}`} />
       {paused ? "En pausa" : "En vivo"}
     </span>
   );

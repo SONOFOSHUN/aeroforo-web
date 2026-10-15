@@ -1,15 +1,20 @@
 import { LEVELS, LEVEL_ORDER } from "@/lib/air";
 import type { Level } from "@/lib/types";
 
-/** Cabezal del Aeróforo: tres luces, la activa brilla según el nivel. */
-export function Semaforo({ level, size = "md" }: { level: Level | null; size?: "sm" | "md" | "lg" }) {
-  const dim = { sm: "h-5 w-5", md: "h-12 w-12", lg: "h-16 w-16 sm:h-20 sm:w-20" }[size];
-  const pad = { sm: "gap-1 p-1.5 rounded-full", md: "gap-3 p-3 rounded-[1.75rem]", lg: "gap-4 p-4 rounded-[2.25rem]" }[size];
+/** Cabezal del Aeróforo: carcasa grafito con tres luces; la activa se enciende según el nivel. */
+export function Semaforo({ level, size = "md" }: { level: Level | null; size?: "xs" | "sm" | "md" | "lg" }) {
+  const dim = { xs: "h-2.5 w-2.5", sm: "h-4 w-4", md: "h-11 w-11", lg: "h-14 w-14 sm:h-[72px] sm:w-[72px]" }[size];
+  const pad = {
+    xs: "gap-[3px] p-1 rounded-full",
+    sm: "gap-1 p-1.5 rounded-full",
+    md: "gap-2.5 p-2.5 rounded-[26px]",
+    lg: "gap-3 p-3 rounded-[34px] sm:gap-3.5 sm:p-3.5 sm:rounded-[44px]",
+  }[size];
   return (
     <div
       role="img"
-      aria-label={level ? `Semáforo en ${level}: ${LEVELS[level].label}` : "Semáforo sin datos"}
-      className={`flex flex-col border border-white/10 bg-[#05080f] shadow-[inset_0_2px_12px_rgba(0,0,0,0.8)] ${pad}`}
+      aria-label={level ? `Semáforo en ${LEVELS[level].label}` : "Semáforo sin datos"}
+      className={`flex shrink-0 flex-col bg-[#15181d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_10px_30px_-10px_rgba(0,0,0,0.5)] ${pad}`}
     >
       {[...LEVEL_ORDER].reverse().map((l) => {
         const on = l === level;
@@ -17,10 +22,11 @@ export function Semaforo({ level, size = "md" }: { level: Level | null; size?: "
         return (
           <span
             key={l}
-            className={`${dim} rounded-full transition-all duration-500`}
+            className={`${dim} rounded-full`}
             style={{
-              background: on ? `radial-gradient(circle at 35% 30%, #fff8 0%, ${c} 35%, ${c} 100%)` : `${c}1f`,
-              boxShadow: on ? `0 0 24px 4px ${c}99, 0 0 60px 10px ${c}40` : "inset 0 0 8px rgba(0,0,0,0.6)",
+              background: on ? `radial-gradient(circle at 38% 32%, rgba(255,255,255,0.55), ${c} 42%)` : `${c}26`,
+              boxShadow: on ? `0 0 18px 2px ${c}80` : "inset 0 1px 3px rgba(0,0,0,0.6)",
+              transition: "background 500ms var(--ease-in-out), box-shadow 500ms var(--ease-in-out)",
             }}
           />
         );

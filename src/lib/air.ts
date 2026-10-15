@@ -2,13 +2,14 @@ import type { Level, Metric, MetricCode, Reading, Station } from "./types";
 
 export const LEVELS: Record<
   Level,
-  { label: string; short: string; color: string; soft: string; range: string; advice: string; detail: string }
+  { label: string; short: string; color: string; soft: string; ink: string; range: string; advice: string; detail: string }
 > = {
   verde: {
     label: "Bueno",
     short: "Aire limpio",
-    color: "#22C55E",
-    soft: "rgba(34,197,94,0.14)",
+    color: "#16A34A",
+    soft: "#E8F6EC",
+    ink: "#166534",
     range: "ICA 0 – 50",
     advice: "Disfruta las actividades al aire libre.",
     detail: "La calidad del aire es satisfactoria y no representa riesgo para la salud.",
@@ -16,8 +17,9 @@ export const LEVELS: Record<
   amarillo: {
     label: "Moderado",
     short: "Precaución",
-    color: "#F59E0B",
-    soft: "rgba(245,158,11,0.14)",
+    color: "#D97706",
+    soft: "#FDF3E1",
+    ink: "#92400E",
     range: "ICA 51 – 100",
     advice: "Niños, adultos mayores y personas con asma deben reducir el esfuerzo prolongado al aire libre.",
     detail: "Aceptable, pero algunos contaminantes pueden afectar a grupos sensibles.",
@@ -25,12 +27,33 @@ export const LEVELS: Record<
   rojo: {
     label: "Dañino",
     short: "Alerta",
-    color: "#EF4444",
-    soft: "rgba(239,68,68,0.14)",
+    color: "#DC2626",
+    soft: "#FDECEC",
+    ink: "#991B1B",
     range: "ICA > 100",
     advice: "Evita actividades al aire libre, cierra ventanas y usa mascarilla si debes salir.",
     detail: "Toda la población puede sentir efectos en la salud. Se activa la alerta del semáforo.",
   },
+};
+
+/** Qué hacer en cada nivel: se muestra en las notificaciones y en la sección del semáforo. */
+export const RECOMMENDATIONS: Record<Level, string[]> = {
+  verde: [
+    "Abre las ventanas y ventila tu casa o aula.",
+    "Buen momento para caminar, correr o hacer deporte al aire libre.",
+    "No necesitas mascarilla.",
+  ],
+  amarillo: [
+    "Si tienes asma, eres niño o adulto mayor, reduce el esfuerzo intenso al aire libre.",
+    "Evita las avenidas con mucho tránsito: camina por calles secundarias o parques.",
+    "Cierra las ventanas que dan a la avenida en horas punta.",
+  ],
+  rojo: [
+    "Evita salir y suspende el deporte al aire libre.",
+    "Cierra puertas y ventanas; si tienes purificador de aire, enciéndelo.",
+    "Si debes salir, usa mascarilla KN95 o N95.",
+    "Si sientes falta de aire, tos persistente o dolor en el pecho, acude a un centro de salud.",
+  ],
 };
 
 export const LEVEL_ORDER: Level[] = ["verde", "amarillo", "rojo"];
@@ -45,15 +68,23 @@ export const DEFAULT_METRICS: Metric[] = [
   { code: "hum", name: "Humedad", unit: "%", sensor_model: "Bosch BME280", description: "Humedad relativa: influye en la lectura de partículas.", good_max: null, moderate_max: null, affects_level: false, sort_order: 6 },
 ];
 
-// Respaldo local: igual a la tabla `stations` de Supabase.
+// Respaldo local: igual a la tabla `stations` de Supabase. Solo Lima Metropolitana.
 export const DEFAULT_STATIONS: Station[] = [
-  { id: 1, code: "AER-01", name: "Tecsup", district: "Santa Anita", lat: -12.0453, lng: -76.9712, pollution_profile: 1.5, is_online: true, installed_at: "2026-09-01" },
-  { id: 2, code: "AER-02", name: "Parque Kennedy", district: "Miraflores", lat: -12.1219, lng: -77.03, pollution_profile: 0.9, is_online: true, installed_at: "2026-09-03" },
-  { id: 3, code: "AER-03", name: "Plaza Dos de Mayo", district: "Cercado de Lima", lat: -12.0464, lng: -77.0428, pollution_profile: 2.1, is_online: true, installed_at: "2026-09-05" },
-  { id: 4, code: "AER-04", name: "Carretera Central", district: "Ate", lat: -12.0262, lng: -76.918, pollution_profile: 2.6, is_online: true, installed_at: "2026-09-08" },
-  { id: 5, code: "AER-05", name: "Av. Próceres", district: "San Juan de Lurigancho", lat: -11.993, lng: -77.006, pollution_profile: 1.9, is_online: true, installed_at: "2026-09-10" },
-  { id: 6, code: "AER-06", name: "Pentagonito", district: "San Borja", lat: -12.099, lng: -76.999, pollution_profile: 1.1, is_online: true, installed_at: "2026-09-12" },
+  { id: 1, code: "AER-01", name: "Tecsup", district: "Santa Anita", zone: "Lima Este", lat: -12.0453, lng: -76.9712, pollution_profile: 1.5, is_online: true, installed_at: "2026-09-01" },
+  { id: 2, code: "AER-02", name: "Parque Kennedy", district: "Miraflores", zone: "Lima Moderna", lat: -12.1219, lng: -77.03, pollution_profile: 0.9, is_online: true, installed_at: "2026-09-03" },
+  { id: 3, code: "AER-03", name: "Plaza Dos de Mayo", district: "Cercado de Lima", zone: "Lima Centro", lat: -12.0464, lng: -77.0428, pollution_profile: 2.1, is_online: true, installed_at: "2026-09-05" },
+  { id: 4, code: "AER-04", name: "Carretera Central", district: "Ate", zone: "Lima Este", lat: -12.0262, lng: -76.918, pollution_profile: 2.6, is_online: true, installed_at: "2026-09-08" },
+  { id: 5, code: "AER-05", name: "Av. Próceres", district: "San Juan de Lurigancho", zone: "Lima Este", lat: -11.993, lng: -77.006, pollution_profile: 1.9, is_online: true, installed_at: "2026-09-10" },
+  { id: 6, code: "AER-06", name: "Pentagonito", district: "San Borja", zone: "Lima Moderna", lat: -12.099, lng: -76.999, pollution_profile: 1.1, is_online: true, installed_at: "2026-09-12" },
+  { id: 7, code: "AER-07", name: "Av. Túpac Amaru", district: "Comas", zone: "Lima Norte", lat: -11.9372, lng: -77.0596, pollution_profile: 2.0, is_online: true, installed_at: "2026-09-15" },
+  { id: 8, code: "AER-08", name: "Plaza de Armas", district: "Los Olivos", zone: "Lima Norte", lat: -11.992, lng: -77.0705, pollution_profile: 1.6, is_online: true, installed_at: "2026-09-15" },
+  { id: 9, code: "AER-09", name: "Parque Industrial", district: "Villa El Salvador", zone: "Lima Sur", lat: -12.213, lng: -76.937, pollution_profile: 1.8, is_online: true, installed_at: "2026-09-18" },
+  { id: 10, code: "AER-10", name: "Av. Los Héroes", district: "San Juan de Miraflores", zone: "Lima Sur", lat: -12.157, lng: -76.972, pollution_profile: 1.7, is_online: true, installed_at: "2026-09-18" },
+  { id: 11, code: "AER-11", name: "Campo de Marte", district: "Jesús María", zone: "Lima Centro", lat: -12.07, lng: -77.044, pollution_profile: 1.3, is_online: true, installed_at: "2026-09-20" },
+  { id: 12, code: "AER-12", name: "Av. La Molina", district: "La Molina", zone: "Lima Este", lat: -12.079, lng: -76.942, pollution_profile: 0.8, is_online: true, installed_at: "2026-09-20" },
 ];
+
+export const ZONES = ["Lima Norte", "Lima Este", "Lima Centro", "Lima Moderna", "Lima Sur"] as const;
 
 const FIELD: Record<MetricCode, keyof Reading> = {
   pm25: "pm25",

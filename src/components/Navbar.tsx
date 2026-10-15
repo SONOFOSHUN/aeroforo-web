@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, Wind, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { useAir } from "@/hooks/useAirData";
 import { LiveBadge } from "./LiveBadge";
+import { Semaforo } from "./Semaforo";
 
 const LINKS = [
-  { href: "#monitor", label: "Monitor en vivo" },
-  { href: "#estaciones", label: "Estaciones" },
+  { href: "#monitor", label: "Monitor" },
+  { href: "#estaciones", label: "Mapa" },
   { href: "#niveles", label: "Semáforo" },
   { href: "#como-funciona", label: "Cómo funciona" },
   { href: "#equipo", label: "Equipo" },
@@ -15,42 +16,53 @@ const LINKS = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { paused } = useAir();
+  const [scrolled, setScrolled] = useState(false);
+  const { paused, latest, selectedId } = useAir();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-line bg-bg/75 backdrop-blur-xl">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <a href="#inicio" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent">
-            <Wind size={18} />
-          </span>
+    <header
+      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-xl backdrop-saturate-150 transition-[background-color,border-color] duration-300 ${
+        scrolled || open ? "border-line bg-bg/80" : "border-transparent bg-bg/0"
+      }`}
+    >
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <a href="#inicio" className="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight">
+          <Semaforo level={latest(selectedId)?.level ?? null} size="xs" />
           Aeróforo
         </a>
-        <ul className="hidden items-center gap-7 text-sm text-muted md:flex">
+        <ul className="hidden items-center gap-1 text-sm text-muted md:flex">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} className="transition-colors hover:text-text">
+              <a href={l.href} className="rounded-full px-3 py-1.5 transition-colors duration-150 hover:bg-black/[0.04] hover:text-text">
                 {l.label}
               </a>
             </li>
           ))}
         </ul>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <LiveBadge paused={paused} />
           <button
-            className="rounded-lg p-2 text-muted hover:text-text md:hidden"
+            className="pressable grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-black/5 hover:text-text md:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
           >
-            {open ? <X size={20} /> : <Menu size={20} />}
+            {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </nav>
       {open && (
-        <ul className="border-t border-line px-4 py-3 md:hidden">
+        <ul className="border-t border-line px-4 py-2 md:hidden">
           {LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} onClick={() => setOpen(false)} className="block py-2 text-muted hover:text-text">
+              <a href={l.href} onClick={() => setOpen(false)} className="block py-2.5 text-[15px] text-muted hover:text-text">
                 {l.label}
               </a>
             </li>

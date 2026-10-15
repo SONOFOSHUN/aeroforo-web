@@ -1,121 +1,111 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useAir } from "@/hooks/useAirData";
-import { LEVELS, formatValue, overallLevel, timeSecFmt, valueOf } from "@/lib/air";
-import { ParticleField } from "./ParticleField";
+import { LEVELS, LEVEL_ORDER, ZONES, formatValue, overallLevel, timeFmt, valueOf, worst } from "@/lib/air";
+import type { Level } from "@/lib/types";
 import { Semaforo } from "./Semaforo";
+import { StationSelect } from "./StationSelect";
 
 export function Hero() {
   const { stations, metrics, selectedId, latest, ready } = useAir();
-  const [videoOk, setVideoOk] = useState(false);
   const station = stations.find((s) => s.id === selectedId) ?? stations[0];
   const r = latest(station.id);
   const level = r?.level ?? null;
-  const color = level ? LEVELS[level].color : "#22d3ee";
+  const info = level ? LEVELS[level] : null;
   const driver = r ? overallLevel(r, metrics).driver : "pm25";
   const driverMetric = metrics.find((m) => m.code === driver);
 
-  return (
-    <section id="inicio" className="relative overflow-hidden pt-16">
-      {/* Video de fondo opcional: coloca public/media/hero.mp4 (generado en Higgsfield) */}
-      <video
-        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${videoOk ? "opacity-35" : "opacity-0"}`}
-        src="/media/hero.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        onLoadedData={() => setVideoOk(true)}
-        aria-hidden
-      />
-      <div className="grid-bg absolute inset-0 opacity-60" />
-      <div
-        className="absolute inset-0 transition-[background] duration-1000"
-        style={{ background: `radial-gradient(60% 60% at 75% 40%, ${color}22, transparent 70%)` }}
-      />
-      <ParticleField color={color} />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-bg" />
+  // Peor nivel actual por zona de Lima Metropolitana
+  const zoneLevels = ZONES.map((z) => {
+    const ls = stations
+      .filter((s) => s.zone === z)
+      .map((s) => latest(s.id)?.level)
+      .filter(Boolean) as Level[];
+    return { zone: z, level: ls.length ? ls.reduce(worst) : null, count: ls.length };
+  });
+  const counts = LEVEL_ORDER.map((l) => stations.filter((s) => latest(s.id)?.level === l).length);
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1.15fr_0.85fr]">
+  return (
+    <section id="inicio" className="relative pt-16">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-14 sm:px-6 md:pt-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
         <div>
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            Proyecto de innovación · Tecsup 2026
-          </p>
-          <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            El aire que respiras,
-            <br />
-            <span className="bg-gradient-to-r from-green via-amber to-red bg-clip-text text-transparent">
-              en un semáforo.
-            </span>
+          <p className="eyebrow">Proyecto de innovación · Tecsup 2026</p>
+          <h1 className="display mt-4 text-[42px] font-semibold sm:text-6xl lg:text-[56px] xl:text-[64px]">
+            Respira informado.
+            <span className="block text-muted">Lima, en un semáforo.</span>
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            Aeróforo mide PM2.5, PM10, CO₂ y monóxido de carbono cada pocos segundos y lo traduce en verde, amarillo o
-            rojo. Así cualquier persona sabe, de un vistazo, si es seguro estar al aire libre.
+          <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-muted">
+            Aeróforo mide PM2.5, PM10, CO₂ y monóxido de carbono en {stations.length} puntos de Lima Metropolitana.
+            Cuando el aire cambia, el semáforo cambia de color y te avisa qué hacer.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="#monitor"
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 font-medium text-bg transition hover:brightness-110"
-            >
-              Ver monitor en vivo <ArrowRight size={18} />
+            <a href="#monitor" className="pressable inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-medium text-white hover:bg-ink/90">
+              Ver monitor en vivo <ArrowRight size={16} />
             </a>
-            <a
-              href="#como-funciona"
-              className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface/60 px-5 py-3 font-medium transition hover:border-accent/40"
-            >
+            <a href="#como-funciona" className="pressable inline-flex h-11 items-center rounded-full border border-line-strong bg-surface px-5 text-[15px] font-medium hover:bg-surface-2">
               Cómo funciona
             </a>
           </div>
-          <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-line pt-6">
-            {[
-              [String(stations.length), "estaciones en Lima"],
-              ["4", "contaminantes medidos"],
-              ["3 s", "entre lecturas"],
-            ].map(([n, l]) => (
-              <div key={l}>
-                <dt className="sr-only">{l}</dt>
-                <dd className="font-mono text-2xl font-semibold">{n}</dd>
-                <dd className="mt-1 text-xs text-muted">{l}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
 
-        <div className="card relative mx-auto w-full max-w-sm p-6 backdrop-blur">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted">Estación {station.code}</p>
-              <p className="mt-1 flex items-center gap-1.5 font-medium">
-                <MapPin size={14} className="text-accent" />
-                {station.name}, {station.district}
+          <div className="mt-12">
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="eyebrow">Lima Metropolitana ahora</p>
+              <p className="text-xs text-muted tabular">
+                {counts[0]} bueno · {counts[1]} moderado · {counts[2]} dañino
               </p>
             </div>
-            <span className="font-mono text-xs text-muted">{r ? timeSecFmt.format(new Date(r.recorded_at)) : "--:--"}</span>
+            <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {zoneLevels.map(({ zone, level: l }) => (
+                <li key={zone} className="level-transition rounded-xl border border-line bg-surface px-3 py-2.5" style={l ? { background: LEVELS[l].soft, borderColor: "transparent" } : undefined}>
+                  <p className="text-[12px] text-muted">{zone.replace("Lima ", "")}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium" style={l ? { color: LEVELS[l].ink } : undefined}>
+                    <span className="h-2 w-2 rounded-full" style={{ background: l ? LEVELS[l].color : "var(--faint)" }} />
+                    {l ? LEVELS[l].label : "—"}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="mt-6 flex items-center gap-8">
+        </div>
+
+        <div
+          className="level-transition relative overflow-hidden rounded-[28px] border border-line p-5 shadow-[var(--shadow-float)] sm:p-7"
+          style={{ background: info ? `linear-gradient(160deg, #fff 0%, ${info.soft} 70%)` : "#fff" }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <StationSelect />
+            <span className="text-xs text-muted tabular">{r ? `Actualizado ${timeFmt.format(new Date(r.recorded_at))}` : "Conectando…"}</span>
+          </div>
+
+          <div className="mt-8 flex items-center gap-6 sm:gap-10">
             <Semaforo level={level} size="lg" />
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted">ICA</p>
-              <p className="font-mono text-6xl font-semibold tabular-nums" style={{ color }}>
+            <div className="min-w-0">
+              <p className="text-sm text-muted">
+                {station.name} · {station.zone}
+              </p>
+              <p className="display mt-1 text-[88px] font-semibold tabular sm:text-[112px]" style={{ letterSpacing: "-0.05em" }}>
                 {ready && r ? r.aqi : "—"}
               </p>
-              <p className="mt-1 text-lg font-medium" style={{ color }}>
-                {level ? LEVELS[level].label : "Conectando…"}
+              <p className="level-transition -mt-1 text-xl font-semibold sm:text-2xl" style={{ color: info?.ink }}>
+                {info ? info.label : "Conectando…"}
               </p>
               {r && driverMetric && (
-                <p className="mt-3 text-sm text-muted">
-                  Principal: <span className="text-text">{driverMetric.name}</span>{" "}
-                  <span className="font-mono">
+                <p className="mt-2 text-sm text-muted">
+                  Índice de calidad del aire · principal {driverMetric.name}{" "}
+                  <span className="tabular text-text">
                     {formatValue(driver, valueOf(r, driver))} {driverMetric.unit}
                   </span>
                 </p>
               )}
             </div>
           </div>
-          {level && <p className="mt-6 rounded-xl p-3 text-sm" style={{ background: LEVELS[level].soft }}>{LEVELS[level].advice}</p>}
+
+          {info && (
+            <p className="mt-8 rounded-2xl bg-white/80 px-4 py-3 text-[15px] leading-snug backdrop-blur">
+              {info.advice}
+            </p>
+          )}
         </div>
       </div>
     </section>

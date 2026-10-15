@@ -1,5 +1,7 @@
 export type Level = "verde" | "amarillo" | "rojo";
 
+export type Zone = "Lima Norte" | "Lima Este" | "Lima Centro" | "Lima Moderna" | "Lima Sur";
+
 export type MetricCode = "pm25" | "pm10" | "co2" | "co" | "temp" | "hum";
 
 export interface Station {
@@ -7,6 +9,7 @@ export interface Station {
   code: string;
   name: string;
   district: string;
+  zone: Zone;
   lat: number;
   lng: number;
   pollution_profile: number;
